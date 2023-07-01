@@ -1,102 +1,175 @@
-// S112 Kowata World Countries Database.cpp 
-//
+// S112 Kowata Country Database App.cpp 
+//Author: Michael Kowata
+//Goal: Create a database held in parallel vectors
+//      with data regarding: country name, capital(s), currencies, languages
+//---------------------------------------------------------------------------
 
 #include <iostream>
 #include <fstream>
-#include <vector>
 #include <string>
+#include <vector>
 using namespace std;
 
-//Structures---------------------------------------------------------
-struct Country {
-    //Data members
-    string name;
-    string capital;
-    string currency;
-    string language;
-
-    //Function members
-    string stringify()
-    {
-        string result;
-        result = " Country [ name: " + name + ", Capital: " + capital
-            + ", Currency: " + currency + ", Language(s): " + language + "]";
-        return result;
-    }
-};
-
-//-------------------------------------------------------------------
-//Prototypes
-
-void experiment01();
-void experiment02();
-
-//-------------------------------------------------------------------
+//Prototypes-----------------------------------------------------------------
+void populateVector(vector<string>& v, string fileName);
+void printVector(vector<string>& v, string caption);
+void findValueVector(vector<string> v, string key, int& pos, int& counter);
+void testSequentialSearch(vector <string>vcountry, vector <string> vcapital, vector <string> vlanguage, vector <string> vcurrency);
+void testBinarySearch(vector <string>vcountry, vector <string> vcapital, vector <string> vlanguage, vector <string> vcurrency);
+void myBinarySearch(vector<string> v, string key, int& pos, int& counter);
 int main()
 {
-    //experiment01();
-    experiment02();
+    //Data Declaration
+    vector<string> vcountry;
+    vector<string> vcapital;
+    vector<string> vcurrency;
+    vector<string> vlanguage;
+
+    //Populate the World Countries Database :
+    populateVector(vcountry, "c:/users/mkowata/temp/xcountry.txt");
+    //printVector(vcountry, "This is the COUNTRY list ");
+
+    populateVector(vcapital, "c:/users/mkowata/temp/xcapital.txt");
+    //printVector(vcapital, "This is the CAPITAL list ");
+
+    populateVector(vcurrency, "c:/users/mkowata/temp/xcurrency.txt");
+   // printVector(vcurrency, "This is the CURRENCY list ");
+
+    populateVector(vlanguage, "c:/users/mkowata/temp/xlanguage.txt");
+   // printVector(vlanguage, "This is the LANGUAGE list ");
+
+    if (vcountry.size() == vcapital.size() && vcountry.size() == vcurrency.size() && vcountry.size() == vlanguage.size())
+    {
+        cout << "World Country Database successfully created\n";
+    }
+    else
+    {
+        cout << "ERROR - database is corrupted - different sizes\n";
+        exit(2);
+    }
+    ////Expose a menu to retrieve by country
+    //int pos = 0, counter = 0;
+    //findValueVector(vcountry, "Brazil", pos, counter);
+    //if (pos >= 0)
+    //{
+    //    cout << "\tCapital: " << vcapital[pos] << endl;
+    //    cout << "\tCountry: " << vcountry[pos] << endl;
+    //}
+    //cout << "Pos: " << pos << " Counter: " << counter << endl;
+
+    testSequentialSearch(vcountry, vcapital, vlanguage, vcurrency);
+
+    testBinarySearch(vcountry, vcapital, vlanguage, vcurrency);
 }
 
-//-------------------------------------------------------------------
-void experiment01()
+//---------------------------------------------------------------------------
+//User-defined methods
+void populateVector(vector<string>& v, string fileName)
 {
-    Country c1;
-    c1.name = "Vulcan";
-    c1.capital = "Vulcan City";
-    c1.currency = "Space credits";
-    c1.language = "Vulcanian";
-
-    Country c2{ "Narnia", "Narnia City", "Gold coins", "English" };
-
-    cout << "Country: " << c2.name << ", Capital: " << c2.capital << ", Currency: " << c2.currency
-        << ", Language: " << c2.language << endl;
-
+    ifstream infile(fileName);
+    if (!infile)
+    {
+        cout << "Error - File not found";
+        exit(1);
+    }
+    string line;
+    while (getline(infile, line))
+    {
+        v.push_back(line);
+    }
+    infile.close();
 }
-//-------------------------------------------------------------------
-void experiment02()
+
+void printVector(vector<string>& v, string caption)
 {
-    vector <Country> vcountry;
-    //Country c{ "Narnia", "Narnia City", "Gold Coin", "English" };
-    //vcountry.push_back(c);
-
-    string strName, strCapital, strCurrency, strLanguage;
-
-    ifstream xcountry("c:/users/mkowata/temp/xcountry.txt");
-    ifstream xcapital("c:/users/mkowata/temp/xcapital.txt");
-    ifstream xcurrency("c:/users/mkowata/temp/xcurrency.txt");
-    ifstream xlanguage("c:/users/mkowata/temp/xlanguage.txt");
-
-    if (!xcountry)
+    cout << caption << endl;
+    for (int i = 0; i < v.size(); i++)
     {
-        cout << "Error - file not found \n";
-        exit(101);
+        cout << i << "\t" << v[i] << endl;
     }
-    //TO DO - do the same for the other files
+}
 
-    while (getline(xcountry, strName))
+//---------------------------------------------------------
+void findValueVector(vector<string> v, string key, int& pos, int& counter)
+{
+    counter = 0;
+    for (pos = 0; pos < v.size(); pos++)
     {
-        getline(xcapital, strCapital);
-        getline(xcurrency, strCurrency);
-        getline(xlanguage, strLanguage);
-
-        Country c{ strName, strCapital, strCurrency, strLanguage };
-        vcountry.push_back(c);
+        counter++;
+        if (v[pos] == key)
+        {
+            return;
+        }
     }
+    pos = -1;
+}
 
-    xcapital.close();
-    xcountry.close();
-    xcurrency.close();
-    xlanguage.close();
-
-
-  for (int i = 0; i < vcountry.size(); i++)
+void testSequentialSearch(vector <string>vcountry, vector <string> vcapital, vector <string> vlanguage, vector <string> vcurrency)
+{
+    //Expose a menu to retrieve by country
+    do
     {
-        cout << vcountry[i].stringify() << endl;
-    }
+        string countryName;
+        cout << "Enter a country name [xxx to end]: ";
+        getline(cin, countryName);
+        if (countryName == "xxx") break;
+        int pos = 0, counter = 0;
+        findValueVector(vcountry, countryName, pos, counter);
+        if (pos >= 0)
+        {
+            cout << "\tSEQ - Capital: " << vcapital[pos] << endl;
+            cout << "\tSEQ - Country: " << vcountry[pos] << endl;
+            cout << "\tSEQ - Language: " << vlanguage[pos] << endl;
+            cout << "\tSEQ - Currency: " << vcurrency[pos] << endl;
+        }
+        cout << "\tSEQ - Pos: " << pos << " Counter: " << counter << endl;
+    } while (true);
+    //ctrl+k+s to make a do while 
+}
 
+void testBinarySearch(vector <string>vcountry, vector <string> vcapital, vector <string> vlanguage, vector <string> vcurrency)
+{
+    do
+    {
+        string countryName;
+        cout << "Enter a country name [xxx to end]: ";
+        getline(cin, countryName);
+        if (countryName == "xxx") break;
+        int pos = 0, counter = 0;
+        myBinarySearch(vcountry, countryName, pos, counter);
+        if (pos >= 0)
+        {
+            cout << "\tBIN - Capital: " << vcapital[pos] << endl;
+            cout << "\tBIN - Country: " << vcountry[pos] << endl;
+            cout << "\tBIN _ Language: " << vlanguage[pos] << endl;
+            cout << "\tBIN - Currency: " << vcurrency[pos] << endl;
+        }
+        cout << "\tBIN - Pos: " << pos << " Counter: " << counter << endl;
+    } while (true);
+}
 
-    cout << "All done experiment02\n";
-
+void myBinarySearch(vector<string> v, string key, int& pos, int& counter)
+{
+    counter = 0;
+    int first = 0;
+    int last = v.size() - 1;
+    while (first <= last)
+    {
+        counter++;
+        pos = (first + last) / 2;
+        if (v[pos] == key)
+        {
+            return;
+        }
+        if (v[pos] > key)
+        {
+            last = pos - 1;  //explore left size
+        }
+        else
+        {
+            first = pos + 1;
+        }
+    }   
+    pos = -1;
 }
 
